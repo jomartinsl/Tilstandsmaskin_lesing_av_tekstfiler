@@ -1,1 +1,118 @@
+static void Main(string[] args)
+{
+    // Variabler
+    Hendelse enHendelse; //= Hendelse.TEGN;
+    List<Aksjon> Aksjonsliste;
+    string INNPUT = @"C:\Users\jomar\OneDrive\Dokumenter\C-sharp_tekststreng\INNPUTT.txt";
+    string SESJON = @"C:\Users\jomar\OneDrive\Dokumenter\C-sharp_tekststreng\SESJONNN.txt";
+    StreamReader sr = new StreamReader(INNPUT);
+    StreamWriter sw = new StreamWriter(SESJON);
+    int antallMeldinger = 0;
+    int ordTotalt = 0;
+    int tegnTotalt = 0;
+    bool inniMelding = false;
+    string enMelding = "";
+    string enMelding2 = "";
 
+
+    // Oppretter et tilstandsmaskin-objekt for bruk her
+    TekststrengTM tekststrengTM = new TekststrengTM();
+    List<string> meldinger = new List<string>();
+
+
+    while (!sr.EndOfStream)
+    {
+        int tegn = sr.Read();
+
+        char bokstav = (char)tegn;
+        enHendelse = MottaEnHendelse(bokstav);
+
+
+        Aksjonsliste = tekststrengTM.HåndtererEnHendelse(enHendelse);
+        foreach (Aksjon aksjon in Aksjonsliste)
+        {
+            switch (aksjon)
+            {
+                case Aksjon.LesMelding:
+                    inniMelding = true;
+                    
+                    break;
+                case Aksjon.Stopp:
+                    //enMelding += ' ';
+                    inniMelding = false;
+                    break;
+                case Aksjon.Utskrift:
+                    //Skriver til SESJON.TXT
+                    break;
+                case Aksjon.ERROR:
+
+                    break;
+                case Aksjon.LagreMelding:
+                    meldinger.Add(enMelding); //Lagrer for mye tekst, det overskirver hverandre
+                    enMelding = "";
+                    break;
+                case Aksjon.Setning:
+                    enMelding += '\n';
+                    antallMeldinger += 1;
+                    break;
+            }
+        }
+
+        if (inniMelding)
+        {
+
+            enMelding += bokstav;
+
+            tegnTotalt++;
+            if (bokstav == ' ' || bokstav == '.') 
+            { 
+                ordTotalt++; 
+            } 
+
+        }
+
+
+    }
+
+    foreach (string a in meldinger)
+    {
+        enMelding2 += a;
+    }
+
+    sw.WriteLine(enMelding2);
+    sw.WriteLine("Antall meldinger = "+ antallMeldinger);
+    sw.WriteLine("Antall ord = "+ordTotalt);
+    sw.WriteLine("Antall tegn = "+tegnTotalt);
+    sw.Close();
+
+    Console.WriteLine(enMelding2);
+    Console.WriteLine("Antall meldinger = " + antallMeldinger);
+    Console.WriteLine("Antall ord = " + ordTotalt);
+    Console.WriteLine("Antall tegn = " + tegnTotalt);
+    Console.ReadKey();
+}
+static Hendelse MottaEnHendelse(char input)
+{
+    Hendelse svar = Hendelse.TEGN;
+
+
+    switch (input)
+    {
+        case (char)27:
+            svar = Hendelse.ESC;
+            break;
+        case (char)02:
+            svar = Hendelse.STX;
+            break;
+        case (char)03:
+            svar = Hendelse.ETX;
+            break;
+        case (char)00:
+            svar = Hendelse.TOM;
+            break;
+        default:
+            svar= Hendelse.TEGN;
+            break;
+    }
+    return svar;
+}
