@@ -1,0 +1,96 @@
+enum Tilstand { Idle, ESC1, LeserOgLagrer, ESC2}
+enum Hendelse { ESC, STX, ETX, TEGN, TOM}
+enum Aksjon { Utskrift, LagreMelding, FortsettLesing, LesMelding, Stopp, ERROR, Setning}
+internal class TekststrengTM
+{
+    Tilstand minTilstand;
+    public TekststrengTM()
+    {
+        minTilstand = Tilstand.Idle;
+    }
+
+    public List<Aksjon> HåndtererEnHendelse(Hendelse enHendelse)
+    {
+        List<Aksjon> svar = new List<Aksjon>();
+
+        switch (enHendelse)
+        {
+
+            case Hendelse.ESC:
+                switch (minTilstand)
+                {
+                    case Tilstand.Idle:
+                        minTilstand = Tilstand.ESC1;
+                        break;
+                    
+                    case Tilstand.LeserOgLagrer:
+                        svar.Add(Aksjon.Stopp);
+                        svar.Add(Aksjon.LagreMelding);
+                        minTilstand = Tilstand.ESC2;
+                        break;
+                    case Tilstand.ESC1:
+                    case Tilstand.ESC2:
+                        break;
+                }
+                break;
+            case Hendelse.STX:
+                switch (minTilstand)
+                {
+                    case Tilstand.ESC1:
+                        minTilstand = Tilstand.LeserOgLagrer;
+                        break;
+                    case Tilstand.Idle:
+                    case Tilstand.LeserOgLagrer:
+                    case Tilstand.ESC2:
+                        break;
+                }
+                break;
+            case Hendelse.ETX:
+                switch (minTilstand)
+                {
+                    case Tilstand.Idle:
+                    case Tilstand.ESC1:
+                        svar.Add(Aksjon.Stopp);
+                        Console.WriteLine("Det ble skrevet til fil");
+                        break;
+                    case Tilstand.LeserOgLagrer:
+                        
+                        break;
+                    case Tilstand.ESC2:
+                        svar.Add(Aksjon.Utskrift);
+                        svar.Add(Aksjon.Setning);
+                        minTilstand = Tilstand.Idle;
+                        break;
+
+                }
+                break;
+            case Hendelse.TEGN:
+                switch (minTilstand)
+                {
+                    case Tilstand.ESC2:
+                        minTilstand = Tilstand.LeserOgLagrer;
+                        break;
+                    case Tilstand.Idle:
+                    case Tilstand.ESC1:
+                        break;
+                    case Tilstand.LeserOgLagrer:
+                        svar.Add(Aksjon.LesMelding);
+                        break;
+                }
+                break;
+            case Hendelse.TOM:
+                switch (minTilstand)
+                {
+                    case Tilstand.ESC2:
+                    case Tilstand.Idle:
+                    case Tilstand.ESC1:
+                        break;
+                    case Tilstand.LeserOgLagrer:
+                        svar.Add(Aksjon.ERROR);
+                        break;
+                }
+                break;
+        }
+        return svar;
+    } 
+}
